@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173f5f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="睡眠チェック">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>毎朝の睡眠チェック</title>
+  <style>
+    :root {
+      --ink: #17324d;
+      --muted: #64758a;
+      --line: #d9e3ec;
+      --panel: #ffffff;
+      --page: #f3f7fa;
+      --primary: #176b87;
+      --primary-dark: #0f4f68;
+      --primary-soft: #e8f4f7;
+      --danger: #b42318;
+      --danger-soft: #fff0ee;
+      --success: #16794b;
+      --success-soft: #eaf8f0;
+      --shadow: 0 10px 30px rgba(20, 50, 75, .08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(180deg, #edf5f8 0, var(--page) 220px);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", sans-serif;
+      line-height: 1.65;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button, label, select, input[type="time"], input[type="date"] { touch-action: manipulation; }
+
+    .app-shell {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 22px 14px calc(36px + env(safe-area-inset-bottom));
+    }
+
+    .hero {
+      padding: 22px 20px;
+      margin-bottom: 16px;
+      color: white;
+      background: linear-gradient(135deg, #154c67, #1a8195);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 { margin: 0 0 8px; font-size: clamp(25px, 5vw, 34px); letter-spacing: .02em; }
+    .hero p { margin: 0; opacity: .94; }
+
+    .notice {
+      margin-top: 14px;
+      padding: 13px 14px;
+      color: #24465d;
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.95);
+      border-radius: 14px;
+      font-size: 14px;
+    }
+
+    .card {
+      margin: 14px 0;
+      padding: 19px 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field-label, .question-title {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 750;
+      letter-spacing: .01em;
+    }
+    .question-number { color: var(--primary); margin-right: 4px; }
+    .help { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+
+    input[type="text"], input[type="date"], input[type="time"], select, textarea {
+      width: 100%;
+      min-height: 50px;
+      padding: 11px 13px;
+      color: var(--ink);
+      background: white;
+      border: 1.5px solid #b9c8d5;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(23,107,135,.12);
+    }
+    input:disabled, select:disabled { color: #8795a5; background: #eef2f5; }
+    textarea { min-height: 112px; resize: vertical; }
+
+    .time-row, .duration-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .unknown-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 48px;
+      padding: 9px 13px;
+      color: #42566a;
+      background: #f5f7f9;
+      border: 1px solid #cbd6df;
+      border-radius: 12px;
+      white-space: nowrap;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .unknown-toggle input { width: 20px; height: 20px; accent-color: var(--primary); }
+
+    .rating-grid, .binary-grid {
+      display: grid;
+      gap: 9px;
+    }
+    .rating-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .binary-grid { grid-template-columns: 1fr 1fr; }
+
+    .choice input { position: absolute; opacity: 0; pointer-events: none; }
+    .choice span {
+      display: flex;
+      min-height: 52px;
+      padding: 8px 6px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #334b60;
+      background: #f7fafb;
+      border: 1.5px solid #c9d5df;
+      border-radius: 12px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .choice input:checked + span {
+      color: white;
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 5px 14px rgba(23,107,135,.22);
+      transform: translateY(-1px);
+    }
+    .choice input:focus-visible + span { outline: 3px solid rgba(23,107,135,.25); }
+
+    .scale-description {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .scale-description span:nth-child(2) { text-align: center; }
+    .scale-description span:last-child { text-align: right; }
+
+    .submit-area { position: sticky; bottom: 0; z-index: 5; padding-top: 10px; }
+    .submit-panel {
+      padding: 13px;
+      background: rgba(243,247,250,.94);
+      border: 1px solid rgba(203,214,223,.9);
+      border-radius: 17px;
+      backdrop-filter: blur(12px);
+    }
+    .submit-button {
+      width: 100%;
+      min-height: 58px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border: 0;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      box-shadow: 0 9px 20px rgba(15,79,104,.25);
+      cursor: pointer;
+    }
+    .submit-button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+
+    .status {
+      display: none;
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .status.show { display: block; }
+    .status.error { color: var(--danger); background: var(--danger-soft); border: 1px solid #f3c8c2; }
+    .status.success { color: var(--success); background: var(--success-soft); border: 1px solid #bfe7cf; }
+    .status.info { color: #22526d; background: var(--primary-soft); border: 1px solid #c4e4ea; }
+
+    .privacy-note { color: var(--muted); font-size: 13px; }
+    .version { margin-top: 16px; text-align: center; color: #82909d; font-size: 12px; }
+
+    @media (max-width: 620px) {
+      .app-shell { padding-inline: 10px; }
+      .hero, .card { border-radius: 16px; }
+      .meta-grid { grid-template-columns: 1fr; }
+      .rating-grid { gap: 6px; }
+      .choice span { min-height: 48px; font-size: 14px; }
+      .time-row, .duration-row { grid-template-columns: 1fr; }
+      .unknown-toggle { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <h1>毎朝の睡眠チェック</h1>
+      <p>起床後、できるだけ早い時間に、昨夜から今朝までの睡眠について回答してください。</p>
+      <div class="notice">
+        正確な時刻や時間が分からない場合は、おおよその値で構いません。どうしても分からない場合は「不明」を選択してください。
+      </div>
+    </section>
+
+    <form id="sleepForm" novalidate>
+      <section class="card">
+        <div class="meta-grid">
+          <div>
+            <label class="field-label" for="studentId">被験者ID／番号</label>
+            <input id="studentId" name="student_id" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="40" placeholder="例：A001" required>
+          </div>
+          <div>
+            <label class="field-label" for="sleepDate">この睡眠の起床日</label>
+            <input id="sleepDate" name="sleep_date" type="date" required>
+            <p class="help">通常は変更不要です。遅れて回答する場合のみ修正してください。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="question-title">回答条件の確認（睡眠10項目の採点には含みません）</div>
+        <p>この回答は朝食前に行っていますか。</p>
+        <div class="binary-grid" role="radiogroup" aria-label="朝食前の回答確認">
+          <label class="choice"><input type="radio" name="before_breakfast" value="true"><span>はい</span></label>
+          <label class="choice"><input type="radio" name="before_breakfast" value="false"><span>いいえ</span></label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="1">
+        <label class="question-title" for="bedEntryTime"><span class="question-number">1.</span>昨夜、ベッドまたは布団に入った時刻を教えてください。</label>
+        <div class="time-row">
+          <input id="bedEntryTime" name="bed_entry_time" type="time" step="60">
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="bedEntryTime" name="bed_entry_unknown">不明</label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="2">
+        <label class="question-title" for="trySleepTime"><span class="question-number">2.</span>昨夜、実際に眠ろうとした時刻を教えてください。</label>
+        <div class="time-row">
+          <input id="trySleepTime" name="try_sleep_time" type="time" step="60">
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="trySleepTime" name="try_sleep_unknown">不明</label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="3">
+        <label class="question-title" for="sleepOnsetLatency"><span class="question-number">3.</span>眠ろうとしてから、実際に眠りにつくまでに、およそ何分かかりましたか。</label>
+        <div class="duration-row">
+          <select id="sleepOnsetLatency" name="sleep_onset_latency_min" aria-label="入眠までの時間"></select>
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="sleepOnsetLatency" name="sleep_onset_latency_unknown">不明</label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="4">
+        <label class="question-title" for="awakeningCount"><span class="question-number">4.</span>眠りについた後、朝までに何回くらい目が覚めましたか。</label>
+        <div class="duration-row">
+          <select id="awakeningCount" name="awakening_count" aria-label="夜間覚醒回数"></select>
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="awakeningCount" name="awakening_count_unknown">不明</label>
+        </div>
+        <p class="help">目が覚めなかった場合は「0回」としてください。</p>
+      </section>
+
+      <section class="card question" data-q="5">
+        <label class="question-title" for="wasoMinutes"><span class="question-number">5.</span>眠りについた後、夜中に目が覚めていた時間は、合計でおよそ何分でしたか。</label>
+        <div class="duration-row">
+          <select id="wasoMinutes" name="waso_min" aria-label="夜間覚醒時間"></select>
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="wasoMinutes" name="waso_unknown">不明</label>
+        </div>
+        <p class="help">目が覚めなかった場合は「0分」としてください。</p>
+      </section>
+
+      <section class="card question" data-q="6">
+        <label class="question-title" for="finalAwakeningTime"><span class="question-number">6.</span>今朝、最後に目が覚めた時刻を教えてください。</label>
+        <div class="time-row">
+          <input id="finalAwakeningTime" name="final_awakening_time" type="time" step="60">
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="finalAwakeningTime" name="final_awakening_unknown">不明</label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="7">
+        <label class="question-title" for="outOfBedTime"><span class="question-number">7.</span>今朝、ベッドまたは布団から出て、一日の活動を始めた時刻を教えてください。</label>
+        <div class="time-row">
+          <input id="outOfBedTime" name="out_of_bed_time" type="time" step="60">
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="outOfBedTime" name="out_of_bed_unknown">不明</label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="8">
+        <div class="question-title"><span class="question-number">8.</span>昨夜、実際に眠っていた時間は、合計でおよそどのくらいだったと思いますか。</div>
+        <p class="help" style="margin-bottom:10px">途中で目が覚めていた時間は含めないでください。</p>
+        <div class="duration-row">
+          <div class="meta-grid">
+            <select id="tstHours" name="self_reported_tst_hour" aria-label="睡眠時間の時間部分"></select>
+            <select id="tstMinutes" name="self_reported_tst_min" aria-label="睡眠時間の分部分"></select>
+          </div>
+          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="tstHours,tstMinutes" name="self_reported_tst_unknown">不明</label>
+        </div>
+      </section>
+
+      <section class="card question" data-q="9">
+        <div class="question-title"><span class="question-number">9.</span>昨夜の睡眠の質は、全体としてどうでしたか。</div>
+        <div class="rating-grid" role="radiogroup" aria-label="睡眠の質">
+          <label class="choice"><input type="radio" name="sleep_quality" value="1"><span>1</span></label>
+          <label class="choice"><input type="radio" name="sleep_quality" value="2"><span>2</span></label>
+          <label class="choice"><input type="radio" name="sleep_quality" value="3"><span>3</span></label>
+          <label class="choice"><input type="radio" name="sleep_quality" value="4"><span>4</span></label>
+          <label class="choice"><input type="radio" name="sleep_quality" value="5"><span>5</span></label>
+        </div>
+        <div class="scale-description"><span>非常に悪かった</span><span>普通</span><span>非常に良かった</span></div>
+      </section>
+
+      <section class="card question" data-q="10">
+        <div class="question-title"><span class="question-number">10.</span>今朝目覚めたとき、どの程度よく休まり、回復したと感じましたか。</div>
+        <div class="rating-grid" role="radiogroup" aria-label="朝の回復感">
+          <label class="choice"><input type="radio" name="morning_recovery" value="1"><span>1</span></label>
+          <label class="choice"><input type="radio" name="morning_recovery" value="2"><span>2</span></label>
+          <label class="choice"><input type="radio" name="morning_recovery" value="3"><span>3</span></label>
+          <label class="choice"><input type="radio" name="morning_recovery" value="4"><span>4</span></label>
+          <label class="choice"><input type="radio" name="morning_recovery" value="5"><span>5</span></label>
+        </div>
+        <div class="scale-description"><span>まったく休まっていない</span><span>どちらともいえない</span><span>十分に回復した</span></div>
+      </section>
+
+      <section class="card">
+        <label class="question-title" for="notes">任意の特記事項</label>
+        <p class="help" style="margin-bottom:10px">試合、遠征、早朝練習、夜間移動、体調不良、痛み、睡眠環境の変化など、昨夜の睡眠に大きく影響した出来事があれば記入してください。</p>
+        <textarea id="notes" name="notes" maxlength="1000" placeholder="任意入力"></textarea>
+        <p class="privacy-note">※他者の氏名など、個人を特定できる情報は記入しないでください。</p>
+      </section>
+
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <div class="submit-area">
+        <div class="submit-panel">
+          <button id="submitButton" class="submit-button" type="submit">回答を送信する</button>
+        </div>
+      </div>
+    </form>
+
+    <div id="versionLabel" class="version"></div>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    'use strict';
+
+    const CONFIG = window.SLEEP_APP_CONFIG || {};
+    const form = document.getElementById('sleepForm');
+    const submitButton = document.getElementById('submitButton');
+    const statusBox = document.getElementById('status');
+    const studentIdInput = document.getElementById('studentId');
+    const sleepDateInput = document.getElementById('sleepDate');
+
+    function pad2(value) { return String(value).padStart(2, '0'); }
+
+    function formatLocalDate(date) {
+      return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+    }
+
+    function formatLocalDateTime(date) {
+      return `${formatLocalDate(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
+    }
+
+    function addPlaceholder(select, label = '選択してください') {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = label;
+      option.selected = true;
+      select.appendChild(option);
+    }
+
+    function populateMinuteSelect(select, maxMinutes, stepMinutes, cappedLabel) {
+      addPlaceholder(select);
+      for (let minutes = 0; minutes <= maxMinutes; minutes += stepMinutes) {
+        const option = document.createElement('option');
+        option.value = String(minutes);
+        option.textContent = `${minutes}分`;
+        select.appendChild(option);
+      }
+      if (cappedLabel) {
+        const option = document.createElement('option');
+        option.value = `${maxMinutes}+`;
+        option.textContent = cappedLabel;
+        select.appendChild(option);
+      }
+    }
+
+    function populateFormOptions() {
+      populateMinuteSelect(document.getElementById('sleepOnsetLatency'), 180, 5, '180分以上');
+      populateMinuteSelect(document.getElementById('wasoMinutes'), 180, 5, '180分以上');
+
+      const awakening = document.getElementById('awakeningCount');
+      addPlaceholder(awakening);
+      for (let count = 0; count <= 10; count += 1) {
+        const option = document.createElement('option');
+        option.value = String(count);
+        option.textContent = `${count}回`;
+        awakening.appendChild(option);
+      }
+      const cappedAwakening = document.createElement('option');
+      cappedAwakening.value = '10+';
+      cappedAwakening.textContent = '10回以上';
+      awakening.appendChild(cappedAwakening);
+
+      const hours = document.getElementById('tstHours');
+      addPlaceholder(hours, '時間を選択');
+      for (let hour = 0; hour <= 12; hour += 1) {
+        const option = document.createElement('option');
+        option.value = String(hour);
+        option.textContent = `${hour}時間`;
+        hours.appendChild(option);
+      }
+
+      const minutes = document.getElementById('tstMinutes');
+      addPlaceholder(minutes, '分を選択');
+      for (let minute = 0; minute < 60; minute += 5) {
+        const option = document.createElement('option');
+        option.value = String(minute);
+        option.textContent = `${minute}分`;
+        minutes.appendChild(option);
+      }
+    }
+
+    function bindUnknownToggles() {
+      document.querySelectorAll('[data-unknown-for]').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+          const targetIds = checkbox.dataset.unknownFor.split(',');
+          targetIds.forEach((id) => {
+            const target = document.getElementById(id);
+            if (!target) return;
+            target.disabled = checkbox.checked;
+            if (checkbox.checked) target.value = '';
+          });
+        });
+      });
+    }
+
+    function isUnknown(name) {
+      return Boolean(form.elements[name] && form.elements[name].checked);
+    }
+
+    function selectedRadioValue(name) {
+      const selected = form.querySelector(`input[name="${name}"]:checked`);
+      return selected ? selected.value : '';
+    }
+
+    function normalizeCappedValue(raw) {
+      if (!raw) return { value: '', capped: false };
+      if (raw.endsWith('+')) return { value: Number(raw.slice(0, -1)), capped: true };
+      return { value: Number(raw), capped: false };
+    }
+
+    function answeredOrUnknown(inputId, unknownName) {
+      const input = document.getElementById(inputId);
+      return Boolean((input && input.value !== '') || isUnknown(unknownName));
+    }
+
+    function validateForm() {
+      const errors = [];
+      if (!studentIdInput.value.trim()) errors.push('被験者ID／番号を入力してください。');
+      if (!sleepDateInput.value) errors.push('起床日を確認してください。');
+      if (!selectedRadioValue('before_breakfast')) errors.push('朝食前かどうかを選択してください。');
+
+      const checks = [
+        ['bedEntryTime', 'bed_entry_unknown', '1'],
+        ['trySleepTime', 'try_sleep_unknown', '2'],
+        ['sleepOnsetLatency', 'sleep_onset_latency_unknown', '3'],
+        ['awakeningCount', 'awakening_count_unknown', '4'],
+        ['wasoMinutes', 'waso_unknown', '5'],
+        ['finalAwakeningTime', 'final_awakening_unknown', '6'],
+        ['outOfBedTime', 'out_of_bed_unknown', '7']
+      ];
+
+      checks.forEach(([inputId, unknownName, questionNumber]) => {
+        if (!answeredOrUnknown(inputId, unknownName)) errors.push(`質問${questionNumber}を回答してください。`);
+      });
+
+      const tstAnswered = (document.getElementById('tstHours').value !== '' && document.getElementById('tstMinutes').value !== '') || isUnknown('self_reported_tst_unknown');
+      if (!tstAnswered) errors.push('質問8の時間と分を回答してください。');
+      if (!selectedRadioValue('sleep_quality')) errors.push('質問9を回答してください。');
+      if (!selectedRadioValue('morning_recovery')) errors.push('質問10を回答してください。');
+
+      return errors;
+    }
+
+    function buildRecordId(now) {
+      const stamp = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+      const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+      return `SLP-${stamp}-${random}`;
+    }
+
+    function buildPayload() {
+      const now = new Date();
+      const sol = normalizeCappedValue(document.getElementById('sleepOnsetLatency').value);
+      const awakenings = normalizeCappedValue(document.getElementById('awakeningCount').value);
+      const waso = normalizeCappedValue(document.getElementById('wasoMinutes').value);
+      const tstUnknown = isUnknown('self_reported_tst_unknown');
+      const tstHour = tstUnknown ? '' : document.getElementById('tstHours').value;
+      const tstMinute = tstUnknown ? '' : document.getElementById('tstMinutes').value;
+
+      return {
+        record_id: buildRecordId(now),
+        student_id: studentIdInput.value.trim(),
+        sleep_date: sleepDateInput.value,
+        before_breakfast_flag: selectedRadioValue('before_breakfast') === 'true',
+
+        bed_entry_time: isUnknown('bed_entry_unknown') ? '' : document.getElementById('bedEntryTime').value,
+        bed_entry_unknown_flag: isUnknown('bed_entry_unknown'),
+        try_sleep_time: isUnknown('try_sleep_unknown') ? '' : document.getElementById('trySleepTime').value,
+        try_sleep_unknown_flag: isUnknown('try_sleep_unknown'),
+
+        sleep_onset_latency_min: isUnknown('sleep_onset_latency_unknown') ? '' : sol.value,
+        sleep_onset_latency_unknown_flag: isUnknown('sleep_onset_latency_unknown'),
+        sleep_onset_latency_capped_flag: sol.capped,
+
+        awakening_count: isUnknown('awakening_count_unknown') ? '' : awakenings.value,
+        awakening_count_unknown_flag: isUnknown('awakening_count_unknown'),
+        awakening_count_capped_flag: awakenings.capped,
+
+        waso_min: isUnknown('waso_unknown') ? '' : waso.value,
+        waso_unknown_flag: isUnknown('waso_unknown'),
+        waso_capped_flag: waso.capped,
+
+        final_awakening_time: isUnknown('final_awakening_unknown') ? '' : document.getElementById('finalAwakeningTime').value,
+        final_awakening_unknown_flag: isUnknown('final_awakening_unknown'),
+        out_of_bed_time: isUnknown('out_of_bed_unknown') ? '' : document.getElementById('outOfBedTime').value,
+        out_of_bed_unknown_flag: isUnknown('out_of_bed_unknown'),
+
+        self_reported_tst_hour: tstHour,
+        self_reported_tst_min: tstMinute,
+        self_reported_tst_unknown_flag: tstUnknown,
+
+        sleep_quality: Number(selectedRadioValue('sleep_quality')),
+        morning_recovery: Number(selectedRadioValue('morning_recovery')),
+        notes: document.getElementById('notes').value.trim(),
+
+        client_timestamp_iso: now.toISOString(),
+        local_datetime: formatLocalDateTime(now),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo',
+        timezone_offset_min: -now.getTimezoneOffset(),
+        study_code: CONFIG.STUDY_CODE || 'MORNING_SLEEP_CHECK',
+        app_version: CONFIG.APP_VERSION || '1.0.1',
+        user_agent: navigator.userAgent
+      };
+    }
+
+    function showStatus(message, type) {
+      statusBox.textContent = message;
+      statusBox.className = `status show ${type}`;
+      statusBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function resetForSharedDevice() {
+      form.reset();
+      document.querySelectorAll('[data-unknown-for]').forEach((checkbox) => {
+        checkbox.checked = false;
+        checkbox.dataset.unknownFor.split(',').forEach((id) => {
+          const target = document.getElementById(id);
+          if (target) target.disabled = false;
+        });
+      });
+      sleepDateInput.value = formatLocalDate(new Date());
+      studentIdInput.value = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => studentIdInput.focus(), 450);
+    }
+
+    async function submitRecord(payload) {
+      const endpoint = String(CONFIG.ENDPOINT_URL || '').trim();
+      if (!endpoint || endpoint.includes('PASTE_YOUR')) {
+        throw new Error('Google Apps Script の送信先URLが設定されていません。config.js を確認してください。');
+      }
+
+      // text/plain + no-cors により GitHub Pages から Apps Script へ単純POSTします。
+      // Apps Script側で record_id の重複防止と全計算を実施します。
+      await fetch(endpoint, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const errors = validateForm();
+      if (errors.length) {
+        showStatus(errors[0], 'error');
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = '送信中…';
+      showStatus('回答を送信しています。', 'info');
+
+      try {
+        const payload = buildPayload();
+        await submitRecord(payload);
+        showStatus('送信しました。ありがとうございました。次の方は番号から入力してください。', 'success');
+        resetForSharedDevice();
+      } catch (error) {
+        console.error(error);
+        showStatus(error && error.message ? error.message : '送信できませんでした。通信状態を確認して、もう一度お試しください。', 'error');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = '回答を送信する';
+      }
+    });
+
+    populateFormOptions();
+    bindUnknownToggles();
+    sleepDateInput.value = formatLocalDate(new Date());
+    document.getElementById('versionLabel').textContent = `App Version ${CONFIG.APP_VERSION || '1.0.1'}`;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
+    }
+  </script>
+</body>
+</html>
