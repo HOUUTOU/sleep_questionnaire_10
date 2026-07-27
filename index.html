@@ -157,7 +157,67 @@
       cursor: pointer;
       transition: .15s ease;
     }
-    .choice input:checked + span {
+    /* 1–5の評価は、低い→高いが直感的に分かる5色設計 */
+    .rating-grid .choice:nth-child(1) span {
+      color: #8f352f;
+      background: #fbe6e3;
+      border-color: #df8b82;
+    }
+    .rating-grid .choice:nth-child(2) span {
+      color: #8a561c;
+      background: #fff0dc;
+      border-color: #dda45d;
+    }
+    .rating-grid .choice:nth-child(3) span {
+      color: #6d5c12;
+      background: #fff8d8;
+      border-color: #d8bd4d;
+    }
+    .rating-grid .choice:nth-child(4) span {
+      color: #28664f;
+      background: #e4f4ec;
+      border-color: #72ad91;
+    }
+    .rating-grid .choice:nth-child(5) span {
+      color: #225f6b;
+      background: #deeff2;
+      border-color: #65a7b2;
+    }
+
+    .rating-grid .choice:nth-child(1) input:checked + span {
+      color: white;
+      background: #c9574d;
+      border-color: #b8443b;
+      box-shadow: 0 6px 15px rgba(201,87,77,.28);
+    }
+    .rating-grid .choice:nth-child(2) input:checked + span {
+      color: white;
+      background: #d4872f;
+      border-color: #bd7420;
+      box-shadow: 0 6px 15px rgba(212,135,47,.28);
+    }
+    .rating-grid .choice:nth-child(3) input:checked + span {
+      color: #40370a;
+      background: #e6c84f;
+      border-color: #c7aa34;
+      box-shadow: 0 6px 15px rgba(199,170,52,.28);
+    }
+    .rating-grid .choice:nth-child(4) input:checked + span {
+      color: white;
+      background: #438e6f;
+      border-color: #36795d;
+      box-shadow: 0 6px 15px rgba(67,142,111,.28);
+    }
+    .rating-grid .choice:nth-child(5) input:checked + span {
+      color: white;
+      background: #287887;
+      border-color: #206573;
+      box-shadow: 0 6px 15px rgba(40,120,135,.28);
+    }
+    .rating-grid .choice input:checked + span { transform: translateY(-2px) scale(1.02); }
+
+    /* はい／いいえ等の2択は従来のブランドカラーを維持 */
+    .binary-grid .choice input:checked + span {
       color: white;
       background: var(--primary);
       border-color: var(--primary);
