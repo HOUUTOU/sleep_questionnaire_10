@@ -1,12 +1,12 @@
 {
-  "name": "毎朝の睡眠チェック",
-  "short_name": "睡眠チェック",
-  "description": "毎朝の睡眠状態を記録する研究用Webアプリ",
+  "name": "Athlete Sleep Check Q10",
+  "short_name": "睡眠Q10",
+  "description": "毎朝の10項目睡眠チェック",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f7fa",
-  "theme_color": "#173f5f",
+  "background_color": "#f7f8f2",
+  "theme_color": "#2f6d5e",
   "lang": "ja",
   "icons": [
     {
