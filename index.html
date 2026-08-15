@@ -3,712 +3,252 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#173f5f">
+  <meta name="theme-color" content="#2f6d5e">
+  <meta name="description" content="毎朝の睡眠を10項目で記録する、アスリート向け睡眠チェック。">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="睡眠チェック">
+  <meta name="apple-mobile-web-app-title" content="睡眠チェックQ10">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <title>毎朝の睡眠チェック</title>
+  <title>Athlete Sleep Check Q10</title>
   <style>
-    :root {
-      --ink: #17324d;
-      --muted: #64758a;
-      --line: #d9e3ec;
-      --panel: #ffffff;
-      --page: #f3f7fa;
-      --primary: #176b87;
-      --primary-dark: #0f4f68;
-      --primary-soft: #e8f4f7;
-      --danger: #b42318;
-      --danger-soft: #fff0ee;
-      --success: #16794b;
-      --success-soft: #eaf8f0;
-      --shadow: 0 10px 30px rgba(20, 50, 75, .08);
-      --radius: 18px;
-    }
-
-    * { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
-    body {
-      margin: 0;
-      color: var(--ink);
-      background: linear-gradient(180deg, #edf5f8 0, var(--page) 220px);
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", sans-serif;
-      line-height: 1.65;
-    }
-
-    button, input, select, textarea { font: inherit; }
-    button, label, select, input[type="time"], input[type="date"] { touch-action: manipulation; }
-
-    .app-shell {
-      width: min(760px, 100%);
-      margin: 0 auto;
-      padding: 22px 14px calc(36px + env(safe-area-inset-bottom));
-    }
-
-    .hero {
-      padding: 22px 20px;
-      margin-bottom: 16px;
-      color: white;
-      background: linear-gradient(135deg, #154c67, #1a8195);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-    }
-    .hero h1 { margin: 0 0 8px; font-size: clamp(25px, 5vw, 34px); letter-spacing: .02em; }
-    .hero p { margin: 0; opacity: .94; }
-
-    .notice {
-      margin-top: 14px;
-      padding: 13px 14px;
-      color: #24465d;
-      background: rgba(255,255,255,.88);
-      border: 1px solid rgba(255,255,255,.95);
-      border-radius: 14px;
-      font-size: 14px;
-    }
-
-    .card {
-      margin: 14px 0;
-      padding: 19px 18px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .field-label, .question-title {
-      display: block;
-      margin-bottom: 10px;
-      font-weight: 750;
-      letter-spacing: .01em;
-    }
-    .question-number { color: var(--primary); margin-right: 4px; }
-    .help { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
-
-    input[type="text"], input[type="date"], input[type="time"], select, textarea {
-      width: 100%;
-      min-height: 50px;
-      padding: 11px 13px;
-      color: var(--ink);
-      background: white;
-      border: 1.5px solid #b9c8d5;
-      border-radius: 12px;
-      outline: none;
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(23,107,135,.12);
-    }
-    input:disabled, select:disabled { color: #8795a5; background: #eef2f5; }
-    textarea { min-height: 112px; resize: vertical; }
-
-    .time-row, .duration-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .unknown-toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      min-height: 48px;
-      padding: 9px 13px;
-      color: #42566a;
-      background: #f5f7f9;
-      border: 1px solid #cbd6df;
-      border-radius: 12px;
-      white-space: nowrap;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .unknown-toggle input { width: 20px; height: 20px; accent-color: var(--primary); }
-
-    .rating-grid, .binary-grid {
-      display: grid;
-      gap: 9px;
-    }
-    .rating-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    .binary-grid { grid-template-columns: 1fr 1fr; }
-
-    .choice input { position: absolute; opacity: 0; pointer-events: none; }
-    .choice span {
-      display: flex;
-      min-height: 52px;
-      padding: 8px 6px;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #334b60;
-      background: #f7fafb;
-      border: 1.5px solid #c9d5df;
-      border-radius: 12px;
-      font-weight: 750;
-      cursor: pointer;
-      transition: .15s ease;
-    }
-    /* 1–5の評価は、低い→高いが直感的に分かる5色設計 */
-    .rating-grid .choice:nth-child(1) span {
-      color: #8f352f;
-      background: #fbe6e3;
-      border-color: #df8b82;
-    }
-    .rating-grid .choice:nth-child(2) span {
-      color: #8a561c;
-      background: #fff0dc;
-      border-color: #dda45d;
-    }
-    .rating-grid .choice:nth-child(3) span {
-      color: #6d5c12;
-      background: #fff8d8;
-      border-color: #d8bd4d;
-    }
-    .rating-grid .choice:nth-child(4) span {
-      color: #28664f;
-      background: #e4f4ec;
-      border-color: #72ad91;
-    }
-    .rating-grid .choice:nth-child(5) span {
-      color: #225f6b;
-      background: #deeff2;
-      border-color: #65a7b2;
-    }
-
-    .rating-grid .choice:nth-child(1) input:checked + span {
-      color: white;
-      background: #c9574d;
-      border-color: #b8443b;
-      box-shadow: 0 6px 15px rgba(201,87,77,.28);
-    }
-    .rating-grid .choice:nth-child(2) input:checked + span {
-      color: white;
-      background: #d4872f;
-      border-color: #bd7420;
-      box-shadow: 0 6px 15px rgba(212,135,47,.28);
-    }
-    .rating-grid .choice:nth-child(3) input:checked + span {
-      color: #40370a;
-      background: #e6c84f;
-      border-color: #c7aa34;
-      box-shadow: 0 6px 15px rgba(199,170,52,.28);
-    }
-    .rating-grid .choice:nth-child(4) input:checked + span {
-      color: white;
-      background: #438e6f;
-      border-color: #36795d;
-      box-shadow: 0 6px 15px rgba(67,142,111,.28);
-    }
-    .rating-grid .choice:nth-child(5) input:checked + span {
-      color: white;
-      background: #287887;
-      border-color: #206573;
-      box-shadow: 0 6px 15px rgba(40,120,135,.28);
-    }
-    .rating-grid .choice input:checked + span { transform: translateY(-2px) scale(1.02); }
-
-    /* はい／いいえ等の2択は従来のブランドカラーを維持 */
-    .binary-grid .choice input:checked + span {
-      color: white;
-      background: var(--primary);
-      border-color: var(--primary);
-      box-shadow: 0 5px 14px rgba(23,107,135,.22);
-      transform: translateY(-1px);
-    }
-    .choice input:focus-visible + span { outline: 3px solid rgba(23,107,135,.25); }
-
-    .scale-description {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 8px;
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .scale-description span:nth-child(2) { text-align: center; }
-    .scale-description span:last-child { text-align: right; }
-
-    .submit-area { position: sticky; bottom: 0; z-index: 5; padding-top: 10px; }
-    .submit-panel {
-      padding: 13px;
-      background: rgba(243,247,250,.94);
-      border: 1px solid rgba(203,214,223,.9);
-      border-radius: 17px;
-      backdrop-filter: blur(12px);
-    }
-    .submit-button {
-      width: 100%;
-      min-height: 58px;
-      color: white;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      border: 0;
-      border-radius: 14px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: .04em;
-      box-shadow: 0 9px 20px rgba(15,79,104,.25);
-      cursor: pointer;
-    }
-    .submit-button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
-
-    .status {
-      display: none;
-      margin: 12px 0 0;
-      padding: 12px 14px;
-      border-radius: 12px;
-      font-weight: 700;
-    }
-    .status.show { display: block; }
-    .status.error { color: var(--danger); background: var(--danger-soft); border: 1px solid #f3c8c2; }
-    .status.success { color: var(--success); background: var(--success-soft); border: 1px solid #bfe7cf; }
-    .status.info { color: #22526d; background: var(--primary-soft); border: 1px solid #c4e4ea; }
-
-    .privacy-note { color: var(--muted); font-size: 13px; }
-    .version { margin-top: 16px; text-align: center; color: #82909d; font-size: 12px; }
-
-    @media (max-width: 620px) {
-      .app-shell { padding-inline: 10px; }
-      .hero, .card { border-radius: 16px; }
-      .meta-grid { grid-template-columns: 1fr; }
-      .rating-grid { gap: 6px; }
-      .choice span { min-height: 48px; font-size: 14px; }
-      .time-row, .duration-row { grid-template-columns: 1fr; }
-      .unknown-toggle { justify-content: flex-start; }
-    }
+    :root{--ink:#172a2a;--muted:#657574;--paper:#f7f8f2;--card:rgba(255,255,252,.92);--line:#dce4dc;--green:#2f6d5e;--green-dark:#215247;--mint:#dff1e8;--danger:#a7443e;--success:#245c4e}
+    *{box-sizing:border-box}html{background:var(--paper);scroll-behavior:smooth;-webkit-text-size-adjust:100%}body{margin:0;color:var(--ink);background:var(--paper);font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed}
+    .page{min-height:100vh;position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(227,240,229,.84) 0,rgba(247,248,242,0) 38rem),var(--paper)}.ambient{position:absolute;border-radius:50%;filter:blur(4px);pointer-events:none}.one{width:32rem;height:32rem;top:-20rem;left:-12rem;background:#b8dacb;opacity:.65}.two{width:26rem;height:26rem;top:16rem;right:-18rem;background:#f1d4ad;opacity:.35}
+    .shell{width:min(100% - 2rem,780px);margin:0 auto;padding:1.2rem 0 calc(3rem + env(safe-area-inset-bottom));position:relative}.hero{padding:1rem 0 1.5rem}.brand{display:flex;align-items:center;gap:.65rem;font-size:.82rem;font-weight:750;letter-spacing:.07em;color:var(--green-dark)}.mark{display:grid;place-items:center;width:1.9rem;height:1.9rem;border-radius:.65rem;color:#fff;background:var(--green);font-family:Georgia,serif;font-size:1.1rem}.eyebrow{margin:2.6rem 0 .55rem;color:var(--green);font-size:.75rem;font-weight:800;letter-spacing:.18em}.hero h1{margin:0;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-size:clamp(2rem,7vw,3.25rem);line-height:1.16;letter-spacing:-.03em}.hero-copy{max-width:44rem;margin:1rem 0 0;color:var(--muted);line-height:1.85;font-size:.98rem}.hero-note{margin:.9rem 0 0;color:#536a66;font-size:.82rem;line-height:1.7}
+    .message{display:none;margin-top:1rem;padding:.95rem 1rem;border-radius:1rem;font-weight:700;font-size:.9rem;line-height:1.55}.message.show{display:block}.message.success{color:#245c4e;background:#dff2e9;border:1px solid #b8ddcd}.message.error{color:#923e38;background:#fff0ed;border:1px solid #e9c2bd}.message.info{color:#31584e;background:#edf6f1;border:1px solid #c8dfd2}
+    form{display:grid;gap:1rem}.card{margin:0;min-width:0;border:1px solid rgba(205,216,207,.95);border-radius:1.35rem;padding:clamp(1.1rem,4vw,1.55rem);background:var(--card);box-shadow:0 16px 45px rgba(46,69,58,.055);backdrop-filter:blur(12px)}.card.invalid,.date-box.invalid{border-color:#c85d55;box-shadow:0 0 0 3px rgba(200,93,85,.12)}.field-error{margin:.85rem 0 0;color:#923e38;font-size:.82rem;font-weight:750;line-height:1.55}.id-card{display:grid;gap:.65rem;border-color:#bad6c8;background:#f2f9f5}.id-card label{color:var(--green-dark);font-weight:850}.id-card input{width:100%;min-height:3.6rem;border:1px solid #afcbbd;border-radius:.9rem;padding:.75rem .95rem;background:#fff;outline:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.18rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.id-card input:focus,.time:focus,.number:focus,.select:focus,.date-box input:focus,textarea:focus{border-color:#4f8b76;box-shadow:0 0 0 4px rgba(75,133,113,.14)}
+    .progress{position:sticky;top:calc(.35rem + env(safe-area-inset-top));z-index:5;margin:.35rem 0 .2rem;padding:.55rem .75rem;border:1px solid rgba(205,216,207,.78);border-radius:.8rem;background:rgba(247,248,242,.92);backdrop-filter:blur(12px)}.progress-label{display:flex;justify-content:space-between;color:var(--muted);font-size:.75rem;font-weight:700}.track{height:.35rem;margin-top:.5rem;overflow:hidden;border-radius:999px;background:#dbe5dc}.track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--green),#6da68c);transition:width .25s ease}
+    .title,legend{width:100%;display:flex;align-items:flex-start;gap:.85rem;padding:0;font-size:1rem;font-weight:750;line-height:1.65}.num{display:grid;flex:0 0 auto;place-items:center;width:2rem;height:2rem;border-radius:.7rem;color:var(--green-dark);background:var(--mint);font-family:Georgia,serif;font-size:1.05rem}.hint{margin:.7rem 0 0 2.85rem;color:var(--muted);font-size:.82rem;line-height:1.6}.input-row{margin:1rem 0 .75rem 2.85rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}.time,.number,.select,.date-box input,textarea{min-height:3.15rem;border:1px solid #ccd8cf;border-radius:.9rem;color:var(--ink);background:#fff;outline:none}.time{width:min(100%,13rem);padding:.55rem .9rem;font-size:1.15rem;font-weight:750}.number,.select{width:min(100%,14rem);padding:.65rem .85rem;font-size:1.05rem;font-weight:700}.time:disabled,.number:disabled,.select:disabled{color:#9aa5a0;background:#f1f3ef}.unit{color:var(--muted);font-size:.9rem;font-weight:700}.unknown{width:fit-content;margin-left:2.85rem;display:flex;align-items:center;gap:.55rem;color:var(--muted);font-size:.82rem}.unknown input{width:1.15rem;height:1.15rem;accent-color:var(--green)}
+    .dual-select{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;width:min(100%,28rem)}.dual-select .select{width:100%}
+    .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin-top:1.1rem}.scale button{min-width:0;min-height:6.35rem;border:1px solid #d7dfd8;border-radius:.95rem;padding:.7rem .35rem;color:var(--ink);background:#fafbf8;transition:.15s ease}.scale strong{display:grid;place-items:center;width:2.1rem;height:2.1rem;margin:0 auto .5rem;border-radius:50%;font-family:Georgia,serif;background:#edf2ed}.scale span{display:block;font-size:.68rem;line-height:1.38;overflow-wrap:anywhere}.scale button.selected{transform:translateY(-2px);box-shadow:0 8px 18px rgba(46,69,58,.13)}
+    .scale button:nth-child(1){color:#8f352f;background:#fbe6e3;border-color:#df8b82}.scale button:nth-child(2){color:#8a561c;background:#fff0dc;border-color:#dda45d}.scale button:nth-child(3){color:#6d5c12;background:#fff8d8;border-color:#d8bd4d}.scale button:nth-child(4){color:#28664f;background:#e4f4ec;border-color:#72ad91}.scale button:nth-child(5){color:#225f6b;background:#deeff2;border-color:#65a7b2}
+    .scale button:nth-child(1).selected{color:#fff;background:#c9574d;border-color:#b8443b}.scale button:nth-child(2).selected{color:#fff;background:#d4872f;border-color:#bd7420}.scale button:nth-child(3).selected{color:#40370a;background:#e6c84f;border-color:#c7aa34}.scale button:nth-child(4).selected{color:#fff;background:#438e6f;border-color:#36795d}.scale button:nth-child(5).selected{color:#fff;background:#287887;border-color:#206573}.scale button.selected strong{color:inherit;background:rgba(255,255,255,.28)}
+    .optional-label{margin:0 0 .35rem;color:var(--green);font-size:.68rem;font-weight:850;letter-spacing:.12em}.optional h2,.condition h2{margin:0;font-size:1rem;line-height:1.65}.segments{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1rem}.segments button{min-height:3rem;border:1px solid #d2dcd4;border-radius:.8rem;color:var(--muted);background:#fafbf9;font-weight:750}.segments button.selected{border-color:#5d9782;color:var(--green-dark);background:#e4f2ea;box-shadow:0 0 0 2px rgba(75,133,113,.10)}
+    textarea{width:100%;min-height:7rem;padding:.8rem .9rem;resize:vertical;line-height:1.65}.privacy-note{margin:.65rem 0 0;color:var(--muted);font-size:.76rem;line-height:1.55}
+    .date-box{border:1px dashed #cbd6cc;border-radius:1rem;padding:1rem 1.1rem;background:rgba(255,255,255,.55)}.date-box summary{cursor:pointer;color:var(--muted);font-size:.82rem;font-weight:750}.date-box label{display:block;margin:.9rem 0 .5rem;font-size:.82rem;font-weight:750}.date-box input{padding:.55rem .8rem}.submit{min-height:3.7rem;border:0;border-radius:1rem;color:#fff;background:linear-gradient(135deg,var(--green),#407f6d);box-shadow:0 14px 28px rgba(47,109,94,.18);font-size:1rem;font-weight:850}.submit:disabled{opacity:.55}.privacy,.footer{color:var(--muted);font-size:.72rem;line-height:1.65;text-align:center}.footer{margin-top:1.6rem}
+    @media(max-width:560px){.shell{width:min(100% - 1.15rem,780px);padding-top:.7rem}.eyebrow{margin-top:2.1rem}.hero-copy{font-size:.9rem}.card{border-radius:1.1rem}.title,legend{font-size:.94rem}.hint,.input-row,.unknown{margin-left:0}.time,.number,.select{width:100%}.input-row{display:grid;grid-template-columns:1fr}.dual-select{width:100%}.scale{gap:.3rem}.scale button{min-height:6.2rem;padding:.65rem .2rem;border-radius:.8rem}.scale span{font-size:.64rem}.scale strong{width:1.9rem;height:1.9rem}.segments{gap:.4rem}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <main class="app-shell">
-    <section class="hero">
+  <main class="page"><div class="ambient one"></div><div class="ambient two"></div><div class="shell">
+    <header class="hero">
+      <div class="brand"><span class="mark">S</span><span>Athlete Sleep Check</span></div>
+      <p class="eyebrow">MORNING CHECK · Q10</p>
       <h1>毎朝の睡眠チェック</h1>
-      <p>起床後、できるだけ早い時間に、昨夜から今朝までの睡眠について回答してください。</p>
-      <div class="notice">
-        正確な時刻や時間が分からない場合は、おおよその値で構いません。どうしても分からない場合は「不明」を選択してください。
-      </div>
-    </section>
+      <p class="hero-copy">起床後、できるだけ早い時間に、昨夜から今朝までの睡眠について回答してください。</p>
+      <p class="hero-note">正確な時刻や時間が分からない場合は、おおよその値で構いません。どうしても分からない場合は「分からない／覚えていない」を選択してください。</p>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+    </header>
 
     <form id="sleepForm" novalidate>
-      <section class="card">
-        <div class="meta-grid">
-          <div>
-            <label class="field-label" for="studentId">被験者ID／番号</label>
-            <input id="studentId" name="student_id" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="40" placeholder="例：A001" required>
-          </div>
-          <div>
-            <label class="field-label" for="sleepDate">この睡眠の起床日</label>
-            <input id="sleepDate" name="sleep_date" type="date" required>
-            <p class="help">通常は変更不要です。遅れて回答する場合のみ修正してください。</p>
-          </div>
-        </div>
-      </section>
+      <section class="card id-card"><label for="athleteId">ID</label><input id="athleteId" maxlength="80" placeholder="あなたのID" autocomplete="off" autocapitalize="characters" required></section>
 
-      <section class="card">
-        <div class="question-title">回答条件の確認（睡眠10項目の採点には含みません）</div>
-        <p>この回答は朝食前に行っていますか。</p>
-        <div class="binary-grid" role="radiogroup" aria-label="朝食前の回答確認">
-          <label class="choice"><input type="radio" name="before_breakfast" value="true"><span>はい</span></label>
-          <label class="choice"><input type="radio" name="before_breakfast" value="false"><span>いいえ</span></label>
-        </div>
-      </section>
+      <section class="card condition"><p class="optional-label">回答条件確認 · 採点外</p><h2>この回答は朝食前に行っていますか。</h2><div class="segments"><button type="button" id="breakfastYes">はい</button><button type="button" id="breakfastNo">いいえ</button></div></section>
 
-      <section class="card question" data-q="1">
-        <label class="question-title" for="bedEntryTime"><span class="question-number">1.</span>昨夜、ベッドまたは布団に入った時刻を教えてください。</label>
-        <div class="time-row">
-          <input id="bedEntryTime" name="bed_entry_time" type="time" step="60">
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="bedEntryTime" name="bed_entry_unknown">不明</label>
-        </div>
-      </section>
+      <div class="progress"><div class="progress-label"><span>10の質問</span><span id="progressText">0%</span></div><div class="track"><span id="progressBar" style="width:0%"></span></div></div>
 
-      <section class="card question" data-q="2">
-        <label class="question-title" for="trySleepTime"><span class="question-number">2.</span>昨夜、実際に眠ろうとした時刻を教えてください。</label>
-        <div class="time-row">
-          <input id="trySleepTime" name="try_sleep_time" type="time" step="60">
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="trySleepTime" name="try_sleep_unknown">不明</label>
-        </div>
-      </section>
+      <section class="card"><div class="title"><span class="num">1</span><label for="bedEntryTime">昨夜、ベッドまたは布団に入った時刻を教えてください。</label></div><div class="input-row"><input id="bedEntryTime" class="time" type="time" step="60"></div><label class="unknown"><input id="bedEntryUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="3">
-        <label class="question-title" for="sleepOnsetLatency"><span class="question-number">3.</span>眠ろうとしてから、実際に眠りにつくまでに、およそ何分かかりましたか。</label>
-        <div class="duration-row">
-          <select id="sleepOnsetLatency" name="sleep_onset_latency_min" aria-label="入眠までの時間"></select>
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="sleepOnsetLatency" name="sleep_onset_latency_unknown">不明</label>
-        </div>
-      </section>
+      <section class="card"><div class="title"><span class="num">2</span><label for="trySleepTime">昨夜、実際に眠ろうとした時刻を教えてください。</label></div><div class="input-row"><input id="trySleepTime" class="time" type="time" step="60"></div><label class="unknown"><input id="trySleepUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="4">
-        <label class="question-title" for="awakeningCount"><span class="question-number">4.</span>眠りについた後、朝までに何回くらい目が覚めましたか。</label>
-        <div class="duration-row">
-          <select id="awakeningCount" name="awakening_count" aria-label="夜間覚醒回数"></select>
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="awakeningCount" name="awakening_count_unknown">不明</label>
-        </div>
-        <p class="help">目が覚めなかった場合は「0回」としてください。</p>
-      </section>
+      <section class="card"><div class="title"><span class="num">3</span><label for="solMin">眠ろうとしてから、実際に眠りにつくまでに、およそ何分かかりましたか。</label></div><div class="input-row"><select id="solMin" class="select"></select></div><label class="unknown"><input id="solUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="5">
-        <label class="question-title" for="wasoMinutes"><span class="question-number">5.</span>眠りについた後、夜中に目が覚めていた時間は、合計でおよそ何分でしたか。</label>
-        <div class="duration-row">
-          <select id="wasoMinutes" name="waso_min" aria-label="夜間覚醒時間"></select>
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="wasoMinutes" name="waso_unknown">不明</label>
-        </div>
-        <p class="help">目が覚めなかった場合は「0分」としてください。</p>
-      </section>
+      <section class="card"><div class="title"><span class="num">4</span><label for="awakeningCount">眠りについた後、朝までに何回くらい目が覚めましたか。</label></div><p class="hint">目が覚めなかった場合は「0回」としてください。</p><div class="input-row"><select id="awakeningCount" class="select"></select></div><label class="unknown"><input id="awakeningUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="6">
-        <label class="question-title" for="finalAwakeningTime"><span class="question-number">6.</span>今朝、最後に目が覚めた時刻を教えてください。</label>
-        <div class="time-row">
-          <input id="finalAwakeningTime" name="final_awakening_time" type="time" step="60">
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="finalAwakeningTime" name="final_awakening_unknown">不明</label>
-        </div>
-      </section>
+      <section class="card"><div class="title"><span class="num">5</span><label for="wasoMin">眠りについた後、夜中に目が覚めていた時間は、合計でおよそ何分でしたか。</label></div><p class="hint">目が覚めなかった場合は「0分」としてください。</p><div class="input-row"><select id="wasoMin" class="select"></select></div><label class="unknown"><input id="wasoUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="7">
-        <label class="question-title" for="outOfBedTime"><span class="question-number">7.</span>今朝、ベッドまたは布団から出て、一日の活動を始めた時刻を教えてください。</label>
-        <div class="time-row">
-          <input id="outOfBedTime" name="out_of_bed_time" type="time" step="60">
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="outOfBedTime" name="out_of_bed_unknown">不明</label>
-        </div>
-      </section>
+      <section class="card"><div class="title"><span class="num">6</span><label for="finalAwakeningTime">今朝、最後に目が覚めた時刻を教えてください。</label></div><div class="input-row"><input id="finalAwakeningTime" class="time" type="time" step="60"></div><label class="unknown"><input id="finalAwakeningUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="8">
-        <div class="question-title"><span class="question-number">8.</span>昨夜、実際に眠っていた時間は、合計でおよそどのくらいだったと思いますか。</div>
-        <p class="help" style="margin-bottom:10px">途中で目が覚めていた時間は含めないでください。</p>
-        <div class="duration-row">
-          <div class="meta-grid">
-            <select id="tstHours" name="self_reported_tst_hour" aria-label="睡眠時間の時間部分"></select>
-            <select id="tstMinutes" name="self_reported_tst_min" aria-label="睡眠時間の分部分"></select>
-          </div>
-          <label class="unknown-toggle"><input type="checkbox" data-unknown-for="tstHours,tstMinutes" name="self_reported_tst_unknown">不明</label>
-        </div>
-      </section>
+      <section class="card"><div class="title"><span class="num">7</span><label for="outOfBedTime">今朝、ベッドまたは布団から出て、一日の活動を始めた時刻を教えてください。</label></div><div class="input-row"><input id="outOfBedTime" class="time" type="time" step="60"></div><label class="unknown"><input id="outOfBedUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="9">
-        <div class="question-title"><span class="question-number">9.</span>昨夜の睡眠の質は、全体としてどうでしたか。</div>
-        <div class="rating-grid" role="radiogroup" aria-label="睡眠の質">
-          <label class="choice"><input type="radio" name="sleep_quality" value="1"><span>1</span></label>
-          <label class="choice"><input type="radio" name="sleep_quality" value="2"><span>2</span></label>
-          <label class="choice"><input type="radio" name="sleep_quality" value="3"><span>3</span></label>
-          <label class="choice"><input type="radio" name="sleep_quality" value="4"><span>4</span></label>
-          <label class="choice"><input type="radio" name="sleep_quality" value="5"><span>5</span></label>
-        </div>
-        <div class="scale-description"><span>非常に悪かった</span><span>普通</span><span>非常に良かった</span></div>
-      </section>
+      <section class="card"><div class="title"><span class="num">8</span><span>昨夜、実際に眠っていた時間は、合計でおよそどのくらいだったと思いますか。</span></div><p class="hint">途中で目が覚めていた時間は含めないでください。</p><div class="input-row"><div class="dual-select"><select id="tstHours" class="select"></select><select id="tstMinutes" class="select"></select></div></div><label class="unknown"><input id="tstUnknown" type="checkbox"><span>分からない／覚えていない</span></label></section>
 
-      <section class="card question" data-q="10">
-        <div class="question-title"><span class="question-number">10.</span>今朝目覚めたとき、どの程度よく休まり、回復したと感じましたか。</div>
-        <div class="rating-grid" role="radiogroup" aria-label="朝の回復感">
-          <label class="choice"><input type="radio" name="morning_recovery" value="1"><span>1</span></label>
-          <label class="choice"><input type="radio" name="morning_recovery" value="2"><span>2</span></label>
-          <label class="choice"><input type="radio" name="morning_recovery" value="3"><span>3</span></label>
-          <label class="choice"><input type="radio" name="morning_recovery" value="4"><span>4</span></label>
-          <label class="choice"><input type="radio" name="morning_recovery" value="5"><span>5</span></label>
-        </div>
-        <div class="scale-description"><span>まったく休まっていない</span><span>どちらともいえない</span><span>十分に回復した</span></div>
-      </section>
+      <fieldset class="card"><legend><span class="num">9</span><span>昨夜の睡眠の質は、全体としてどうでしたか。</span></legend><div class="scale" data-field="sleepQuality"></div></fieldset>
 
-      <section class="card">
-        <label class="question-title" for="notes">任意の特記事項</label>
-        <p class="help" style="margin-bottom:10px">試合、遠征、早朝練習、夜間移動、体調不良、痛み、睡眠環境の変化など、昨夜の睡眠に大きく影響した出来事があれば記入してください。</p>
-        <textarea id="notes" name="notes" maxlength="1000" placeholder="任意入力"></textarea>
-        <p class="privacy-note">※他者の氏名など、個人を特定できる情報は記入しないでください。</p>
-      </section>
+      <fieldset class="card"><legend><span class="num">10</span><span>今朝目覚めたとき、どの程度よく休まり、回復したと感じましたか。</span></legend><div class="scale" data-field="morningRecovery"></div></fieldset>
 
-      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <section class="card optional"><p class="optional-label">任意の特記事項</p><h2>昨夜の睡眠に大きく影響したと思われる出来事があれば記入してください。</h2><p class="hint" style="margin-left:0">例：試合、遠征、早朝練習、夜間移動、体調不良、痛み、睡眠環境の変化など</p><div style="margin-top:1rem"><textarea id="notes" maxlength="1000" placeholder="任意入力"></textarea></div><p class="privacy-note">※他者の氏名など、個人を特定できる情報は記入しないでください。</p></section>
 
-      <div class="submit-area">
-        <div class="submit-panel">
-          <button id="submitButton" class="submit-button" type="submit">回答を送信する</button>
-        </div>
-      </div>
+      <details class="date-box"><summary>睡眠日を確認・修正する</summary><label for="sleepDate">この睡眠から目覚めた日</label><input id="sleepDate" type="date"><p class="privacy-note">通常は変更不要です。遅れて回答する場合のみ修正してください。</p></details>
+
+      <button id="submitButton" class="submit" type="submit">今日の回答を送信する</button>
+      <p class="privacy">入力したIDは、回答を正しい本人の記録に結び付けるためだけに使用します。</p>
     </form>
-
-    <div id="versionLabel" class="version"></div>
-  </main>
+    <footer class="footer">Q10 App v1.2.1 · Questionnaire Q10 v1.1 · Schema v1</footer>
+  </div></main>
 
   <script src="config.js"></script>
   <script>
-    'use strict';
-
+  (() => {
+    "use strict";
     const CONFIG = window.SLEEP_APP_CONFIG || {};
-    const form = document.getElementById('sleepForm');
-    const submitButton = document.getElementById('submitButton');
-    const statusBox = document.getElementById('status');
-    const studentIdInput = document.getElementById('studentId');
-    const sleepDateInput = document.getElementById('sleepDate');
+    const $ = id => document.getElementById(id);
+    const form = $("sleepForm");
+    const message = $("message");
+    const submitButton = $("submitButton");
+    const state = {sleepQuality:null,morningRecovery:null,beforeBreakfast:null,pendingRecordId:null};
+    const scales = {
+      sleepQuality:["非常に悪かった","悪かった","普通だった","良かった","非常に良かった"],
+      morningRecovery:["まったく休まっていない","あまり休まっていない","どちらともいえない","ある程度休まった","十分に休まり、回復した"]
+    };
+    const questionChecks = [
+      [() => answered("bedEntryTime","bedEntryUnknown"),"bedEntryTime","質問1を入力するか、「分からない／覚えていない」を選択してください。"],
+      [() => answered("trySleepTime","trySleepUnknown"),"trySleepTime","質問2を入力するか、「分からない／覚えていない」を選択してください。"],
+      [() => answered("solMin","solUnknown"),"solMin","質問3を回答してください。"],
+      [() => answered("awakeningCount","awakeningUnknown"),"awakeningCount","質問4を回答してください。"],
+      [() => answered("wasoMin","wasoUnknown"),"wasoMin","質問5を回答してください。"],
+      [() => answered("finalAwakeningTime","finalAwakeningUnknown"),"finalAwakeningTime","質問6を入力するか、「分からない／覚えていない」を選択してください。"],
+      [() => answered("outOfBedTime","outOfBedUnknown"),"outOfBedTime","質問7を入力するか、「分からない／覚えていない」を選択してください。"],
+      [q8Answered,"tstHours","質問8を回答してください。"],
+      [() => state.sleepQuality !== null,'[data-field="sleepQuality"] button',"質問9を回答してください。"],
+      [() => state.morningRecovery !== null,'[data-field="morningRecovery"] button',"質問10を回答してください。"]
+    ];
 
-    function pad2(value) { return String(value).padStart(2, '0'); }
-
-    function formatLocalDate(date) {
-      return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
-    }
-
-    function formatLocalDateTime(date) {
-      return `${formatLocalDate(date)} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
-    }
-
-    function addPlaceholder(select, label = '選択してください') {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = label;
-      option.selected = true;
-      select.appendChild(option);
-    }
-
-    function populateMinuteSelect(select, maxMinutes, stepMinutes, cappedLabel) {
-      addPlaceholder(select);
-      for (let minutes = 0; minutes <= maxMinutes; minutes += stepMinutes) {
-        const option = document.createElement('option');
-        option.value = String(minutes);
-        option.textContent = `${minutes}分`;
-        select.appendChild(option);
+    const localDate = (d=new Date()) => [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+    const localDatetime = (d=new Date()) => localDate(d)+" "+[d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":");
+    const makeId = () => {
+      if (globalThis.crypto && crypto.randomUUID) return "SLP-"+crypto.randomUUID().replaceAll("-","");
+      const bytes = new Uint8Array(20);
+      if (globalThis.crypto && crypto.getRandomValues) {
+        crypto.getRandomValues(bytes);
+        return "SLP-"+Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
       }
-      if (cappedLabel) {
-        const option = document.createElement('option');
-        option.value = `${maxMinutes}+`;
-        option.textContent = cappedLabel;
-        select.appendChild(option);
-      }
+      return "SLP-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);
+    };
+    const selectedValue = id => $(id).value !== "";
+    const answered = (valueId,unknownId) => $(unknownId).checked || selectedValue(valueId);
+    const sleepCard = element => element && element.closest(".card,.date-box");
+
+    function markDirty(event){
+      state.pendingRecordId=null;
+      const element=event&&event.target,card=sleepCard(element);
+      if(card){card.classList.remove("invalid");const note=card.querySelector(".field-error");if(note)note.remove();}
+      if(element){element.removeAttribute("aria-invalid");element.removeAttribute("aria-describedby");}
     }
-
-    function populateFormOptions() {
-      populateMinuteSelect(document.getElementById('sleepOnsetLatency'), 180, 5, '180分以上');
-      populateMinuteSelect(document.getElementById('wasoMinutes'), 180, 5, '180分以上');
-
-      const awakening = document.getElementById('awakeningCount');
-      addPlaceholder(awakening);
-      for (let count = 0; count <= 10; count += 1) {
-        const option = document.createElement('option');
-        option.value = String(count);
-        option.textContent = `${count}回`;
-        awakening.appendChild(option);
-      }
-      const cappedAwakening = document.createElement('option');
-      cappedAwakening.value = '10+';
-      cappedAwakening.textContent = '10回以上';
-      awakening.appendChild(cappedAwakening);
-
-      const hours = document.getElementById('tstHours');
-      addPlaceholder(hours, '時間を選択');
-      for (let hour = 0; hour <= 12; hour += 1) {
-        const option = document.createElement('option');
-        option.value = String(hour);
-        option.textContent = `${hour}時間`;
-        hours.appendChild(option);
-      }
-
-      const minutes = document.getElementById('tstMinutes');
-      addPlaceholder(minutes, '分を選択');
-      for (let minute = 0; minute < 60; minute += 5) {
-        const option = document.createElement('option');
-        option.value = String(minute);
-        option.textContent = `${minute}分`;
-        minutes.appendChild(option);
-      }
+    function showMessage(text,type,shouldScroll=true){
+      message.textContent=text;
+      message.className="message show "+type;
+      message.setAttribute("role",type==="error"?"alert":"status");
+      if(shouldScroll)message.scrollIntoView({behavior:"smooth",block:"center"});
     }
-
-    function bindUnknownToggles() {
-      document.querySelectorAll('[data-unknown-for]').forEach((checkbox) => {
-        checkbox.addEventListener('change', () => {
-          const targetIds = checkbox.dataset.unknownFor.split(',');
-          targetIds.forEach((id) => {
-            const target = document.getElementById(id);
-            if (!target) return;
-            target.disabled = checkbox.checked;
-            if (checkbox.checked) target.value = '';
-          });
-        });
+    function clearInvalid(){document.querySelectorAll(".invalid").forEach(item=>item.classList.remove("invalid"));document.querySelectorAll(".field-error").forEach(item=>item.remove());document.querySelectorAll('[aria-invalid="true"]').forEach(item=>{item.removeAttribute("aria-invalid");item.removeAttribute("aria-describedby")});}
+    function focusInvalid(target,errorText){
+      const element=typeof target==="string"?(target.startsWith("[")?document.querySelector(target):$(target)):target;
+      const card=sleepCard(element);
+      if(card){card.classList.add("invalid");const note=document.createElement("p");note.className="field-error";note.id="fieldError";note.setAttribute("role","alert");note.textContent=errorText;card.appendChild(note);}
+      if(element){element.setAttribute("aria-invalid","true");element.setAttribute("aria-describedby","fieldError");}
+      if(element){element.scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>element.focus(),250);}
+    }
+    function renderScale(field){
+      const box=document.querySelector('[data-field="'+field+'"]');
+      box.innerHTML=scales[field].map((label,index)=>'<button type="button" data-score="'+(index+1)+'" aria-pressed="false"><strong>'+(index+1)+'</strong><span>'+label+'</span></button>').join("");
+      box.addEventListener("click",event=>{
+        const button=event.target.closest("button");if(!button)return;
+        markDirty();state[field]=Number(button.dataset.score);
+        box.querySelectorAll("button").forEach(item=>{item.classList.toggle("selected",item===button);item.setAttribute("aria-pressed",item===button?"true":"false")});
+        sleepCard(button).classList.remove("invalid");updateProgress();
       });
     }
+    function addOption(select,value,label){const option=document.createElement("option");option.value=value;option.textContent=label;select.appendChild(option);}
+    function populate(){
+      addOption($("solMin"),"","選択してください");for(let m=0;m<=180;m+=5)addOption($("solMin"),String(m),m+"分");addOption($("solMin"),"180+","180分以上");
+      addOption($("wasoMin"),"","選択してください");for(let m=0;m<=180;m+=5)addOption($("wasoMin"),String(m),m+"分");addOption($("wasoMin"),"180+","180分以上");
+      addOption($("awakeningCount"),"","選択してください");for(let n=0;n<=10;n++)addOption($("awakeningCount"),String(n),n+"回");addOption($("awakeningCount"),"10+","10回以上");
+      addOption($("tstHours"),"","時間を選択");for(let h=0;h<=12;h++)addOption($("tstHours"),String(h),h+"時間");
+      addOption($("tstMinutes"),"","分を選択");for(let m=0;m<60;m+=5)addOption($("tstMinutes"),String(m),m+"分");
+    }
+    function bindUnknown(valueIds,unknownId){
+      const ids=valueIds.split(",");
+      $(unknownId).addEventListener("change",()=>{ids.forEach(id=>{$(id).disabled=$(unknownId).checked;if($(unknownId).checked)$(id).value=""});sleepCard($(unknownId)).classList.remove("invalid");updateProgress();});
+      ids.forEach(id=>$(id).addEventListener("input",()=>{sleepCard($(id)).classList.remove("invalid");updateProgress();}));
+    }
+    function q8Answered(){return $("tstUnknown").checked||(selectedValue("tstHours")&&selectedValue("tstMinutes"));}
+    function completion(){return questionChecks.filter(item=>item[0]()).length;}
+    function updateProgress(){const count=completion(),percent=Math.round(count/10*100);$("progressText").textContent=count+"/10 · "+percent+"%";$("progressBar").style.width=percent+"%";}
+    function setBreakfast(value){markDirty();state.beforeBreakfast=value;$("breakfastYes").classList.toggle("selected",value===true);$("breakfastNo").classList.toggle("selected",value===false);sleepCard($("breakfastYes")).classList.remove("invalid");}
+    function capped(id){const raw=$(id).value;if(!raw)return{value:"",capped:false};if(raw.endsWith("+"))return{value:Number(raw.slice(0,-1)),capped:true};return{value:Number(raw),capped:false};}
 
-    function isUnknown(name) {
-      return Boolean(form.elements[name] && form.elements[name].checked);
+    function timeToMinute(value){if(!/^\d{2}:\d{2}$/.test(value||""))return null;const [hour,minute]=value.split(":").map(Number);return hour*60+minute;}
+    function daySerial(value){const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(value||"");return match?Math.floor(Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3]))/86400000):null;}
+    function clientTimeLogicError(){
+      const base=daySerial($("sleepDate").value);if(base===null)return false;
+      const bed=$("bedEntryUnknown").checked?null:timeToMinute($("bedEntryTime").value);
+      const trySleep=$("trySleepUnknown").checked?null:timeToMinute($("trySleepTime").value);
+      const finalAwakening=$("finalAwakeningUnknown").checked?null:timeToMinute($("finalAwakeningTime").value);
+      const outOfBed=$("outOfBedUnknown").checked?null:timeToMinute($("outOfBedTime").value);
+      const solAnswer=capped("solMin");
+      const sol=$("solUnknown").checked||solAnswer.capped?null:solAnswer.value;
+      const bedOffsets=bed===null?[null]:[-1,0],tryOffsets=trySleep===null?[null]:[-1,0];
+      const ordered=(left,right)=>left===null||right===null||left<=right;
+      return !bedOffsets.some(bedOffset=>tryOffsets.some(tryOffset=>{
+        const candidateBed=bedOffset===null?null:(base+bedOffset)*1440+bed;
+        const candidateTry=tryOffset===null?null:(base+tryOffset)*1440+trySleep;
+        const onset=candidateTry!==null&&sol!==null?candidateTry+sol:null;
+        const finalValue=finalAwakening===null?null:base*1440+finalAwakening;
+        const outValue=outOfBed===null?null:base*1440+outOfBed;
+        return ordered(candidateBed,candidateTry)&&ordered(candidateTry,onset)&&ordered(onset,finalValue)&&ordered(finalValue,outValue);
+      }));
+    }
+    function validate(){
+      clearInvalid();
+      if(!$("athleteId").value.trim())return{message:"最初にIDを入力してください。",target:"athleteId"};
+      if(state.beforeBreakfast===null)return{message:"朝食前かどうかを選択してください。",target:"breakfastYes"};
+      if(!$("sleepDate").value)return{message:"睡眠日を確認してください。",target:"sleepDate"};
+      const missing=questionChecks.find(item=>!item[0]());
+      if(missing)return{message:missing[2],target:missing[1]};
+      if(clientTimeLogicError())return{message:"入力時刻の並びに矛盾があります。上床、入眠準備、入眠、最終覚醒、離床の順序を確認してください。0時をまたぐ通常の睡眠はそのまま送信できます。",target:"bedEntryTime"};
+      return null;
+    }
+    function resetAll(){
+      form.reset();$("sleepDate").value=localDate();
+      ["bedEntryTime","trySleepTime","solMin","awakeningCount","wasoMin","finalAwakeningTime","outOfBedTime","tstHours","tstMinutes"].forEach(id=>$(id).disabled=false);
+      state.sleepQuality=null;state.morningRecovery=null;state.beforeBreakfast=null;state.pendingRecordId=null;
+      document.querySelectorAll(".scale button").forEach(button=>{button.classList.remove("selected");button.setAttribute("aria-pressed","false")});
+      $("breakfastYes").classList.remove("selected");$("breakfastNo").classList.remove("selected");clearInvalid();updateProgress();
     }
 
-    function selectedRadioValue(name) {
-      const selected = form.querySelector(`input[name="${name}"]:checked`);
-      return selected ? selected.value : '';
-    }
-
-    function normalizeCappedValue(raw) {
-      if (!raw) return { value: '', capped: false };
-      if (raw.endsWith('+')) return { value: Number(raw.slice(0, -1)), capped: true };
-      return { value: Number(raw), capped: false };
-    }
-
-    function answeredOrUnknown(inputId, unknownName) {
-      const input = document.getElementById(inputId);
-      return Boolean((input && input.value !== '') || isUnknown(unknownName));
-    }
-
-    function validateForm() {
-      const errors = [];
-      if (!studentIdInput.value.trim()) errors.push('被験者ID／番号を入力してください。');
-      if (!sleepDateInput.value) errors.push('起床日を確認してください。');
-      if (!selectedRadioValue('before_breakfast')) errors.push('朝食前かどうかを選択してください。');
-
-      const checks = [
-        ['bedEntryTime', 'bed_entry_unknown', '1'],
-        ['trySleepTime', 'try_sleep_unknown', '2'],
-        ['sleepOnsetLatency', 'sleep_onset_latency_unknown', '3'],
-        ['awakeningCount', 'awakening_count_unknown', '4'],
-        ['wasoMinutes', 'waso_unknown', '5'],
-        ['finalAwakeningTime', 'final_awakening_unknown', '6'],
-        ['outOfBedTime', 'out_of_bed_unknown', '7']
-      ];
-
-      checks.forEach(([inputId, unknownName, questionNumber]) => {
-        if (!answeredOrUnknown(inputId, unknownName)) errors.push(`質問${questionNumber}を回答してください。`);
-      });
-
-      const tstAnswered = (document.getElementById('tstHours').value !== '' && document.getElementById('tstMinutes').value !== '') || isUnknown('self_reported_tst_unknown');
-      if (!tstAnswered) errors.push('質問8の時間と分を回答してください。');
-      if (!selectedRadioValue('sleep_quality')) errors.push('質問9を回答してください。');
-      if (!selectedRadioValue('morning_recovery')) errors.push('質問10を回答してください。');
-
-      return errors;
-    }
-
-    function buildRecordId(now) {
-      const stamp = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
-      const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-      return `SLP-${stamp}-${random}`;
-    }
-
-    function buildPayload() {
-      const now = new Date();
-      const sol = normalizeCappedValue(document.getElementById('sleepOnsetLatency').value);
-      const awakenings = normalizeCappedValue(document.getElementById('awakeningCount').value);
-      const waso = normalizeCappedValue(document.getElementById('wasoMinutes').value);
-      const tstUnknown = isUnknown('self_reported_tst_unknown');
-      const tstHour = tstUnknown ? '' : document.getElementById('tstHours').value;
-      const tstMinute = tstUnknown ? '' : document.getElementById('tstMinutes').value;
-
-      return {
-        record_id: buildRecordId(now),
-        student_id: studentIdInput.value.trim(),
-        sleep_date: sleepDateInput.value,
-        before_breakfast_flag: selectedRadioValue('before_breakfast') === 'true',
-
-        bed_entry_time: isUnknown('bed_entry_unknown') ? '' : document.getElementById('bedEntryTime').value,
-        bed_entry_unknown_flag: isUnknown('bed_entry_unknown'),
-        try_sleep_time: isUnknown('try_sleep_unknown') ? '' : document.getElementById('trySleepTime').value,
-        try_sleep_unknown_flag: isUnknown('try_sleep_unknown'),
-
-        sleep_onset_latency_min: isUnknown('sleep_onset_latency_unknown') ? '' : sol.value,
-        sleep_onset_latency_unknown_flag: isUnknown('sleep_onset_latency_unknown'),
-        sleep_onset_latency_capped_flag: sol.capped,
-
-        awakening_count: isUnknown('awakening_count_unknown') ? '' : awakenings.value,
-        awakening_count_unknown_flag: isUnknown('awakening_count_unknown'),
-        awakening_count_capped_flag: awakenings.capped,
-
-        waso_min: isUnknown('waso_unknown') ? '' : waso.value,
-        waso_unknown_flag: isUnknown('waso_unknown'),
-        waso_capped_flag: waso.capped,
-
-        final_awakening_time: isUnknown('final_awakening_unknown') ? '' : document.getElementById('finalAwakeningTime').value,
-        final_awakening_unknown_flag: isUnknown('final_awakening_unknown'),
-        out_of_bed_time: isUnknown('out_of_bed_unknown') ? '' : document.getElementById('outOfBedTime').value,
-        out_of_bed_unknown_flag: isUnknown('out_of_bed_unknown'),
-
-        self_reported_tst_hour: tstHour,
-        self_reported_tst_min: tstMinute,
-        self_reported_tst_unknown_flag: tstUnknown,
-
-        sleep_quality: Number(selectedRadioValue('sleep_quality')),
-        morning_recovery: Number(selectedRadioValue('morning_recovery')),
-        notes: document.getElementById('notes').value.trim(),
-
-        client_timestamp_iso: now.toISOString(),
-        local_datetime: formatLocalDateTime(now),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo',
-        timezone_offset_min: -now.getTimezoneOffset(),
-        study_code: CONFIG.STUDY_CODE || 'MORNING_SLEEP_CHECK',
-        app_version: CONFIG.APP_VERSION || '1.0.1',
-        user_agent: navigator.userAgent
-      };
-    }
-
-    function showStatus(message, type) {
-      statusBox.textContent = message;
-      statusBox.className = `status show ${type}`;
-      statusBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    function resetForSharedDevice() {
-      form.reset();
-      document.querySelectorAll('[data-unknown-for]').forEach((checkbox) => {
-        checkbox.checked = false;
-        checkbox.dataset.unknownFor.split(',').forEach((id) => {
-          const target = document.getElementById(id);
-          if (target) target.disabled = false;
-        });
-      });
-      sleepDateInput.value = formatLocalDate(new Date());
-      studentIdInput.value = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => studentIdInput.focus(), 450);
-    }
-
-    async function submitRecord(payload) {
-      const endpoint = String(CONFIG.ENDPOINT_URL || '').trim();
-      if (!endpoint || endpoint.includes('PASTE_YOUR')) {
-        throw new Error('Google Apps Script の送信先URLが設定されていません。config.js を確認してください。');
-      }
-
-      // text/plain + no-cors により GitHub Pages から Apps Script へ単純POSTします。
-      // Apps Script側で record_id の重複防止と全計算を実施します。
-      await fetch(endpoint, {
-        method: 'POST',
-        mode: 'no-cors',
-        cache: 'no-store',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+    function receiptOnce(endpoint,recordId){
+      return new Promise(resolve=>{
+        const callback="q10Receipt_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2).replace(/[^a-z0-9_]/g,"");
+        const script=document.createElement("script");let settled=false;
+        const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);script.remove();try{delete window[callback]}catch(ignore){window[callback]=undefined}resolve(value);};
+        window[callback]=payload=>finish(Boolean(payload&&payload.ok&&payload.accepted));
+        const url=new URL(endpoint);url.searchParams.set("action","receipt");url.searchParams.set("record_id",recordId);url.searchParams.set("callback",callback);url.searchParams.set("_",String(Date.now()));
+        script.src=url.toString();script.async=true;script.referrerPolicy="no-referrer";script.onerror=()=>finish(false);
+        const timer=setTimeout(()=>finish(false),2500);document.head.appendChild(script);
       });
     }
+    const delay=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
+    async function waitForReceipt(endpoint,recordId){for(let attempt=0;attempt<8;attempt++){if(await receiptOnce(endpoint,recordId))return true;await delay(450);}return false;}
+    function buildPayload(){
+      const sol=capped("solMin"),awakening=capped("awakeningCount"),waso=capped("wasoMin"),now=new Date(),id=$("athleteId").value.trim();
+      if(!state.pendingRecordId)state.pendingRecordId=makeId();
+      const solUnknown=$("solUnknown").checked,awakeningUnknown=$("awakeningUnknown").checked,wasoUnknown=$("wasoUnknown").checked,tstUnknown=$("tstUnknown").checked;
+      return {record_id:state.pendingRecordId,athlete_id:id,student_id:id,sleep_date:$("sleepDate").value,before_breakfast_flag:state.beforeBreakfast,questionnaire_code:"SLEEP_AM_Q10",questionnaire_version:"Q10_v1.1",schema_version:"SLEEP_Q10_SCHEMA_v1",source_type:"WEB_APP",bed_entry_time:$("bedEntryUnknown").checked?"":$("bedEntryTime").value,bed_entry_unknown_flag:$("bedEntryUnknown").checked,try_sleep_time:$("trySleepUnknown").checked?"":$("trySleepTime").value,try_sleep_unknown_flag:$("trySleepUnknown").checked,sleep_onset_latency_min:solUnknown?"":sol.value,sleep_onset_latency_unknown_flag:solUnknown,sleep_onset_latency_capped_flag:solUnknown?false:sol.capped,awakening_count:awakeningUnknown?"":awakening.value,awakening_count_unknown_flag:awakeningUnknown,awakening_count_capped_flag:awakeningUnknown?false:awakening.capped,waso_min:wasoUnknown?"":waso.value,waso_unknown_flag:wasoUnknown,waso_capped_flag:wasoUnknown?false:waso.capped,final_awakening_time:$("finalAwakeningUnknown").checked?"":$("finalAwakeningTime").value,final_awakening_unknown_flag:$("finalAwakeningUnknown").checked,out_of_bed_time:$("outOfBedUnknown").checked?"":$("outOfBedTime").value,out_of_bed_unknown_flag:$("outOfBedUnknown").checked,self_reported_tst_hour:tstUnknown?"":Number($("tstHours").value),self_reported_tst_min:tstUnknown?"":Number($("tstMinutes").value),self_reported_tst_unknown_flag:tstUnknown,sleep_quality:state.sleepQuality,morning_recovery:state.morningRecovery,notes:$("notes").value.trim(),client_timestamp_iso:now.toISOString(),local_datetime:localDatetime(now),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||"Asia/Tokyo",timezone_offset_min:-now.getTimezoneOffset(),study_code:CONFIG.STUDY_CODE||"MORNING_SLEEP_CHECK_Q10",app_version:CONFIG.APP_VERSION||"1.2.1",user_agent:navigator.userAgent};
+    }
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const errors = validateForm();
-      if (errors.length) {
-        showStatus(errors[0], 'error');
-        return;
-      }
-
-      submitButton.disabled = true;
-      submitButton.textContent = '送信中…';
-      showStatus('回答を送信しています。', 'info');
-
-      try {
-        const payload = buildPayload();
-        await submitRecord(payload);
-        showStatus('送信しました。ありがとうございました。次の方は番号から入力してください。', 'success');
-        resetForSharedDevice();
-      } catch (error) {
-        console.error(error);
-        showStatus(error && error.message ? error.message : '送信できませんでした。通信状態を確認して、もう一度お試しください。', 'error');
-      } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = '回答を送信する';
-      }
+    renderScale("sleepQuality");renderScale("morningRecovery");populate();
+    bindUnknown("bedEntryTime","bedEntryUnknown");bindUnknown("trySleepTime","trySleepUnknown");bindUnknown("solMin","solUnknown");bindUnknown("awakeningCount","awakeningUnknown");bindUnknown("wasoMin","wasoUnknown");bindUnknown("finalAwakeningTime","finalAwakeningUnknown");bindUnknown("outOfBedTime","outOfBedUnknown");bindUnknown("tstHours,tstMinutes","tstUnknown");
+    $("breakfastYes").addEventListener("click",()=>setBreakfast(true));$("breakfastNo").addEventListener("click",()=>setBreakfast(false));$("sleepDate").value=localDate();
+    form.addEventListener("input",markDirty);form.addEventListener("change",markDirty);
+    form.addEventListener("submit",async event=>{
+      event.preventDefault();const error=validate();
+      if(error){showMessage(error.message,"error",false);focusInvalid(error.target,error.message);return;}
+      const endpoint=String(CONFIG.ENDPOINT_URL||"").trim();
+      if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(endpoint)){showMessage("送信先が正しく設定されていません。","error");return;}
+      const payload=buildPayload();submitButton.disabled=true;submitButton.textContent="受信を確認しています…";
+      showMessage("回答を送信し、受信確認を待っています。この画面を閉じないでください。","info");
+      try{
+        await fetch(endpoint,{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify(payload),mode:"no-cors",cache:"no-store"}).catch(()=>null);
+        const confirmed=await waitForReceipt(endpoint,payload.record_id);
+        if(!confirmed)throw new Error("RECEIPT_NOT_CONFIRMED");
+        resetAll();showMessage("回答の保存を確認しました。次の方はIDから入力してください。","success");window.scrollTo({top:0,behavior:"smooth"});setTimeout(()=>$("athleteId").focus(),350);
+      }catch(error){showMessage("保存を確認できませんでした。回答は画面に残っています。通信環境を確認し、内容を変えずにもう一度送信してください。","error");}
+      finally{submitButton.disabled=false;submitButton.textContent="今日の回答を送信する";}
     });
-
-    populateFormOptions();
-    bindUnknownToggles();
-    sleepDateInput.value = formatLocalDate(new Date());
-    document.getElementById('versionLabel').textContent = `App Version ${CONFIG.APP_VERSION || '1.0.1'}`;
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.warn));
-    }
+    if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));updateProgress();
+  })();
   </script>
 </body>
 </html>
